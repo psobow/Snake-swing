@@ -23,7 +23,7 @@ public class Snake implements ActionListener, KeyListener {
     private final JPanel RENDER_PANEL = RenderPanel.getInstance();
 
     private static final int FRAME_WIDTH = 400;
-    private static final int FRAME_HEIGHT = 350;
+    private static final int FRAME_HEIGHT = 400;
 
     private static final int SCALE = 10;
 
@@ -31,12 +31,13 @@ public class Snake implements ActionListener, KeyListener {
     private final Random RANDOM_GENERATOR = new Random();
 
     private Point snakeHead;
-    private Point cookie;
+    private static Point cookieLocation;
 
     public static List<Point> snakeParts = new ArrayList<>();
 
     private Direction direction;
     private int ticks;
+    private int tailLength;
     private int score;
     private boolean isSnakeInsideFrame;
 
@@ -56,12 +57,13 @@ public class Snake implements ActionListener, KeyListener {
     }
 
     private void startGame(){
-        cookie = new Point(200, 200);
+        cookieLocation = new Point(20, 20);
         snakeHead = new Point(0, 0);
         snakeParts.clear();
         snakeParts.add(snakeHead);
         direction = Direction.DOWN;
-        ticks = 1;
+        tailLength = 1;
+        ticks = 0;
         score = 0;
         isSnakeInsideFrame = true;
 
@@ -87,6 +89,7 @@ public class Snake implements ActionListener, KeyListener {
         // TODO: uniemożliwić poruszanie się w lewo kiedy poruszamy w prawo
 
         if (ticks % 10 == 0){
+            snakeParts.add( new Point(snakeHead));
             switch (direction) {
                 case UP:
                     if (snakeHead.y - 1 < 0) {
@@ -120,14 +123,17 @@ public class Snake implements ActionListener, KeyListener {
                     }
                     break;
             }
+            if (snakeParts.size() > tailLength){
+                snakeParts.remove(0);
+            }
 
-            //snakeParts.add(new Point(snakeHead));
 
             ticks = 0;
 
-            if(snakeHead.equals(cookie)){
+            if(snakeHead.equals(cookieLocation)){
                 score += 10;
-                cookie.setLocation(getNewCookieLocation());
+                tailLength++;
+                cookieLocation.setLocation(getNewCookieLocation());
             }
         }
 
@@ -157,7 +163,7 @@ public class Snake implements ActionListener, KeyListener {
             case KeyEvent.VK_S:
                 if(direction != Direction.UP) direction = Direction.DOWN;
                 break;
-            case KeyEvent.VK_SPACE:
+            case KeyEvent.VK_SPACE: // restart game
                 startGame();
                 break;
         }
@@ -170,12 +176,16 @@ public class Snake implements ActionListener, KeyListener {
 
     private Point getNewCookieLocation(){
         // TODO: Nowa pozycja ciastka nie może pokrywać się z wężem
-        int newXLocation = RANDOM_GENERATOR.nextInt(FRAME_WIDTH);
-        int newYLocation = RANDOM_GENERATOR.nextInt(FRAME_HEIGHT);
+        int newXLocation = RANDOM_GENERATOR.nextInt(FRAME_WIDTH / SCALE);
+        int newYLocation = RANDOM_GENERATOR.nextInt((FRAME_HEIGHT-30) / SCALE); // musimy odjąć 30 bo pasek u góry okna zjada 30 pixeli
 
+        System.out.println("Nowa pozycja ciastka: X = " + newXLocation + " Y = " + newYLocation );
         return new Point(newXLocation, newYLocation);
     }
 
+    public static Point getCookieLocation() {
+        return cookieLocation;
+    }
 
     public static List<Point> getSnakeParts() {
         return snakeParts;

@@ -30,12 +30,17 @@ public class RenderPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        // background
         g.setColor(Color.BLACK);
         g.fillRect(0,0, FRAME_WIDTH, FRAME_HEIGHT);
 
+        // cookie
+        g.setColor(Color.ORANGE);
+        g.fillRect(Snake.getCookieLocation().x * SCALE, Snake.getCookieLocation().y * SCALE
+                ,SCALE,SCALE);
+
         g.setColor(Color.GREEN);
-
-
         for (Point point : Snake.snakeParts){
             g.fillRect(point.x * SCALE, point.y * SCALE, SCALE, SCALE);
         }
