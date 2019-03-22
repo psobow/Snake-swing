@@ -1,5 +1,7 @@
 package Snake;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.swing.*;
 
 import java.awt.*;
@@ -11,39 +13,60 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
+@Slf4j
 public class Snake implements ActionListener, KeyListener {
     private static Snake snakeInstance = null;
 
     private enum Direction{
         UP, DOWN, LEFT, RIGHT
     }
-
-    private final JFrame GAME_FRAME = new JFrame();
+    private final int DELAY_IN_MS = 200;
     private final JPanel RENDER_PANEL = RenderPanel.getInstance();
-
-    private static final int FRAME_WIDTH = 400;
-    private static final int FRAME_HEIGHT = 400;
-
-    private static final int SCALE = 10;
-
-    private final Timer TIMER = new Timer(20,this);
+    private final Timer TIMER = new Timer(DELAY_IN_MS,this);
     private final Random RANDOM_GENERATOR = new Random();
 
-    private Point snakeHead;
-    private static Point cookieLocation;
+    // Those 3 guys have to be static cuz i need them in RenderPanel.paintComponent();
+    private static final int FRAME_WIDTH = 400;
+    private static final int FRAME_HEIGHT = 400;
+    private static final int SCALE = 10;
 
-    public static List<Point> snakeParts = new ArrayList<>();
+    private final int INITIAL_TAIL_LENGTH = 16;
+    private final int INITIAL_HEAD_X_COORDINATE = 0;
+    private final int INITIAL_HEAD_Y_COORDINATE = 0;
+    private final int INITIAL_COOKIE_X_COORDINATE = 20;
+    private final int INITIAL_COOKIE_Y_COORDINATE = 20;
+    private final int PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR = 30;
 
     private Direction direction;
-    private int ticks;
+
+    // Has to be package-public cuz i need it in RenderPanel.paintComponent();
+    static List<Point> snakeParts = new ArrayList<>();
+
+    private Point snakeHead;
+
+    // static cuz need this in RenderPanel
+    private static Point cookie;
+
+    // this is variable on purpose isNewHeadPositionCollidingWithBody()
+    private Point bodyCollisionPoint = new Point(0,0);
+
+
     private int tailLength;
+
+    private int newHeadCoordinateX;
+    private int newHeadCoordinateY;
+
     private int score;
-    private boolean isSnakeInsideFrame;
+
+    // i need this in RenderPanel so static again...
+    private static boolean isPossibleToMove;
+
+    private boolean isDirectionChangePossible;
 
 
     private Snake() {
-        GAME_FRAME.add(RenderPanel.getInstance());
+        JFrame GAME_FRAME = new JFrame();
+        GAME_FRAME.add(RENDER_PANEL);
         GAME_FRAME.addKeyListener(this);
 
         GAME_FRAME.setTitle("Snake");
@@ -57,15 +80,26 @@ public class Snake implements ActionListener, KeyListener {
     }
 
     private void startGame(){
-        cookieLocation = new Point(20, 20);
-        snakeHead = new Point(0, 0);
+        newHeadCoordinateX = INITIAL_HEAD_X_COORDINATE;
+        newHeadCoordinateY = INITIAL_HEAD_Y_COORDINATE;
+        snakeHead = new Point(newHeadCoordinateX, newHeadCoordinateY);
         snakeParts.clear();
         snakeParts.add(snakeHead);
+        tailLength = INITIAL_TAIL_LENGTH;
         direction = Direction.DOWN;
-        tailLength = 1;
-        ticks = 0;
+        isPossibleToMove = true;
+        isDirectionChangePossible = true;
+
+        cookie = new Point(INITIAL_COOKIE_X_COORDINATE, INITIAL_COOKIE_Y_COORDINATE);
         score = 0;
-        isSnakeInsideFrame = true;
+
+        if (tailLength < 1 ||
+            snakeHead.x < 0 || snakeHead.x >= FRAME_WIDTH / SCALE ||
+            snakeHead.y < 0 || snakeHead.y >= (FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE ||
+            cookie.x < 0 || cookie.x >= FRAME_WIDTH / SCALE ||
+            cookie.y < 0 || cookie.y >= (FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE)
+
+            throw new IllegalArgumentException("Invalid initial values.");
 
         TIMER.start();
     }
@@ -81,114 +115,141 @@ public class Snake implements ActionListener, KeyListener {
         return snakeInstance;
     }
 
+
+    // TODO: dodać sprawdzanie kolizji z ciałem węża
     @Override
     public void actionPerformed(ActionEvent e) {
+        RENDER_PANEL.revalidate();
         RENDER_PANEL.repaint();
-        ticks++;
 
-        // TODO: uniemożliwić poruszanie się w lewo kiedy poruszamy w prawo
+        if(snakeHead.equals(cookie)){
+            score += 10;
+            tailLength++;
+            cookie.setLocation(getNewCookieLocation());
+        }
 
-        if (ticks % 10 == 0){
-            snakeParts.add( new Point(snakeHead));
+        if(isPossibleToMove) {
             switch (direction) {
                 case UP:
-                    if (snakeHead.y - 1 < 0) {
-                        isSnakeInsideFrame = false;
+                    newHeadCoordinateY = snakeHead.y - 1;
+                    if (newHeadCoordinateY < 0 || isNewHeadPositionCollidingWithBody()) {
+                        isPossibleToMove = false;
                     } else {
-                        snakeHead.setLocation(snakeHead.x, snakeHead.y - 1);
+                        snakeHead.setLocation(snakeHead.x, newHeadCoordinateY);
                     }
                     break;
 
                 case DOWN:
-                    if( (snakeHead.y + 1) * SCALE >= FRAME_HEIGHT - 30){ // pasek okna na ubuntu zabiera 30 pixeli z planszy
-                        isSnakeInsideFrame = false;
+                    newHeadCoordinateY = snakeHead.y + 1;
+                    if (newHeadCoordinateY * SCALE >= FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR
+                            || isNewHeadPositionCollidingWithBody()) {
+                        isPossibleToMove = false;
                     } else {
-                        snakeHead.setLocation(snakeHead.x, snakeHead.y + 1);
+                        snakeHead.setLocation(snakeHead.x, newHeadCoordinateY);
                     }
                     break;
 
                 case LEFT:
-                    if( snakeHead.x - 1 < 0){
-                        isSnakeInsideFrame = false;
+                    newHeadCoordinateX = snakeHead.x - 1;
+                    if (newHeadCoordinateX < 0 || isNewHeadPositionCollidingWithBody()) {
+                        isPossibleToMove = false;
                     } else {
-                        snakeHead.setLocation(snakeHead.x - 1, snakeHead.y);
+                        snakeHead.setLocation(newHeadCoordinateX, snakeHead.y);
                     }
                     break;
 
                 case RIGHT:
-                    if( (snakeHead.x + 1) * SCALE >= FRAME_WIDTH) {
-                        isSnakeInsideFrame = false;
+                    newHeadCoordinateX = snakeHead.x + 1;
+                    if (newHeadCoordinateX * SCALE >= FRAME_WIDTH || isNewHeadPositionCollidingWithBody()) {
+                        isPossibleToMove = false;
                     } else {
-                        snakeHead.setLocation(snakeHead.x + 1, snakeHead.y);
+                        snakeHead.setLocation(newHeadCoordinateX, snakeHead.y);
                     }
                     break;
             }
+
+            // Po zmianie kierunku ruchu węża, zezwól na wprowadzanie kolejnej zmiany.
+            isDirectionChangePossible = true;
+
+            /*
+            W kolekcji snakeParts pod indexem 0 znajduję się najstarszy element węża.
+            W każdym evencie dodajemy nowy element na przód węża (pod największym indexem, znajduje się najnowszy element).
+            jeżeli ilość elementów jest większa niż długość ogona to usuwamy najstarszy element.
+             */
+            snakeParts.add( new Point(snakeHead));
             if (snakeParts.size() > tailLength){
                 snakeParts.remove(0);
             }
-
-
-            ticks = 0;
-
-            if(snakeHead.equals(cookieLocation)){
-                score += 10;
-                tailLength++;
-                cookieLocation.setLocation(getNewCookieLocation());
-            }
-        }
-
-        if (isSnakeInsideFrame == false){
-            TIMER.stop();
         }
     }
 
+    private Point getNewCookieLocation(){
+        // TODO: Nowa pozycja ciastka nie może pokrywać się z wężem
+        int newXLocation = RANDOM_GENERATOR.nextInt(FRAME_WIDTH / SCALE);
+        int newYLocation = RANDOM_GENERATOR.nextInt((FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE);
 
+        //log.info("Nowa pozycja ciastka: X = " + newXLocation + " Y = " + newYLocation );
+        return new Point(newXLocation, newYLocation);
+    }
+
+    private boolean isNewHeadPositionCollidingWithBody() {
+        bodyCollisionPoint.setLocation(newHeadCoordinateX, newHeadCoordinateY);
+        boolean result = snakeParts.contains(bodyCollisionPoint);
+        if (result) {
+            if (bodyCollisionPoint.equals(snakeParts.get(0))) return false;
+            else return true;
+        }
+
+        return false;
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int keyID = e.getKeyCode();
-        switch (keyID){
+        switch (keyID) {
             case KeyEvent.VK_A:
-                if(direction != Direction.RIGHT) direction = Direction.LEFT;
+                if (direction != Direction.RIGHT && isDirectionChangePossible) {
+                    isDirectionChangePossible = false;
+                    direction = Direction.LEFT;
+                }
                 break;
 
             case KeyEvent.VK_D:
-                if(direction != Direction.LEFT) direction = Direction.RIGHT;
+                if (direction != Direction.LEFT && isDirectionChangePossible) {
+                    isDirectionChangePossible = false;
+                    direction = Direction.RIGHT;
+                }
                 break;
 
             case KeyEvent.VK_W:
-                if(direction != Direction.DOWN) direction = Direction.UP;
+                if (direction != Direction.DOWN && isDirectionChangePossible) {
+                    isDirectionChangePossible = false;
+                    direction = Direction.UP;
+                }
                 break;
 
             case KeyEvent.VK_S:
-                if(direction != Direction.UP) direction = Direction.DOWN;
+                if (direction != Direction.UP && isDirectionChangePossible){
+                    isDirectionChangePossible = false;
+                    direction = Direction.DOWN;
+                }
                 break;
             case KeyEvent.VK_SPACE: // restart game
                 startGame();
+                break;
+            default:
                 break;
         }
     }
     @Override
     public void keyReleased(KeyEvent e) {}
+
     @Override
     public void keyTyped(KeyEvent e) {}
 
 
-    private Point getNewCookieLocation(){
-        // TODO: Nowa pozycja ciastka nie może pokrywać się z wężem
-        int newXLocation = RANDOM_GENERATOR.nextInt(FRAME_WIDTH / SCALE);
-        int newYLocation = RANDOM_GENERATOR.nextInt((FRAME_HEIGHT-30) / SCALE); // musimy odjąć 30 bo pasek u góry okna zjada 30 pixeli
-
-        System.out.println("Nowa pozycja ciastka: X = " + newXLocation + " Y = " + newYLocation );
-        return new Point(newXLocation, newYLocation);
-    }
-
-    public static Point getCookieLocation() {
-        return cookieLocation;
-    }
-
-    public static List<Point> getSnakeParts() {
-        return snakeParts;
+    public static Point getCookie() {
+        return cookie;
     }
 
     public static int getScale() {
@@ -202,4 +263,9 @@ public class Snake implements ActionListener, KeyListener {
     public static int getFrameHeight() {
         return FRAME_HEIGHT;
     }
+
+    public static boolean isIsPossibleToMove() {
+        return isPossibleToMove;
+    }
+
 }

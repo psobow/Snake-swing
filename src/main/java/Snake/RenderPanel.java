@@ -37,10 +37,12 @@ public class RenderPanel extends JPanel {
 
         // cookie
         g.setColor(Color.ORANGE);
-        g.fillRect(Snake.getCookieLocation().x * SCALE, Snake.getCookieLocation().y * SCALE
+        g.fillRect(Snake.getCookie().x * SCALE, Snake.getCookie().y * SCALE
                 ,SCALE,SCALE);
 
-        g.setColor(Color.GREEN);
+        // snake
+        if (Snake.isIsPossibleToMove()) g.setColor(Color.GREEN);
+        else g.setColor(Color.RED);
         for (Point point : Snake.snakeParts){
             g.fillRect(point.x * SCALE, point.y * SCALE, SCALE, SCALE);
         }
