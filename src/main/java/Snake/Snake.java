@@ -30,7 +30,7 @@ public class Snake implements ActionListener, KeyListener {
     private static final int FRAME_HEIGHT = 400;
     private static final int SCALE = 10;
 
-    private final int INITIAL_TAIL_LENGTH = 16;
+    private final int INITIAL_TAIL_LENGTH = 1;
     private final int INITIAL_HEAD_X_COORDINATE = 0;
     private final int INITIAL_HEAD_Y_COORDINATE = 0;
     private final int INITIAL_COOKIE_X_COORDINATE = 20;
@@ -39,7 +39,7 @@ public class Snake implements ActionListener, KeyListener {
 
     private Direction direction;
 
-    // Has to be package-public cuz i need it in RenderPanel.paintComponent();
+    // Has to be static package-public cuz i need it in RenderPanel.paintComponent();
     static List<Point> snakeParts = new ArrayList<>();
 
     private Point snakeHead;
@@ -51,12 +51,12 @@ public class Snake implements ActionListener, KeyListener {
     private Point bodyCollisionPoint = new Point(0,0);
 
 
-    private int tailLength;
+    private static int snakeLength;
 
     private int newHeadCoordinateX;
     private int newHeadCoordinateY;
 
-    private int score;
+    private static int score;
 
     // i need this in RenderPanel so static again...
     private static boolean isPossibleToMove;
@@ -85,7 +85,7 @@ public class Snake implements ActionListener, KeyListener {
         snakeHead = new Point(newHeadCoordinateX, newHeadCoordinateY);
         snakeParts.clear();
         snakeParts.add(snakeHead);
-        tailLength = INITIAL_TAIL_LENGTH;
+        snakeLength = INITIAL_TAIL_LENGTH;
         direction = Direction.DOWN;
         isPossibleToMove = true;
         isDirectionChangePossible = true;
@@ -93,18 +93,18 @@ public class Snake implements ActionListener, KeyListener {
         cookie = new Point(INITIAL_COOKIE_X_COORDINATE, INITIAL_COOKIE_Y_COORDINATE);
         score = 0;
 
-        if (tailLength < 1 ||
+        if (snakeLength < 1 ||
             snakeHead.x < 0 || snakeHead.x >= FRAME_WIDTH / SCALE ||
             snakeHead.y < 0 || snakeHead.y >= (FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE ||
-            cookie.x < 0 || cookie.x >= FRAME_WIDTH / SCALE ||
-            cookie.y < 0 || cookie.y >= (FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE)
-
-            throw new IllegalArgumentException("Invalid initial values.");
+            cookie.x < 0    || cookie.x >= FRAME_WIDTH / SCALE ||
+            cookie.y < 0    || cookie.y >= (FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE)
+            throw new IllegalArgumentException("Invalid initial values."
+            );
 
         TIMER.start();
     }
 
-    public static Snake getInstance(){
+    static Snake getInstance(){
         if(snakeInstance == null){
             synchronized (Snake.class){
                 if(snakeInstance == null){
@@ -116,7 +116,6 @@ public class Snake implements ActionListener, KeyListener {
     }
 
 
-    // TODO: dodać sprawdzanie kolizji z ciałem węża
     @Override
     public void actionPerformed(ActionEvent e) {
         RENDER_PANEL.revalidate();
@@ -124,7 +123,7 @@ public class Snake implements ActionListener, KeyListener {
 
         if(snakeHead.equals(cookie)){
             score += 10;
-            tailLength++;
+            snakeLength++;
             cookie.setLocation(getNewCookieLocation());
         }
 
@@ -174,10 +173,10 @@ public class Snake implements ActionListener, KeyListener {
             /*
             W kolekcji snakeParts pod indexem 0 znajduję się najstarszy element węża.
             W każdym evencie dodajemy nowy element na przód węża (pod największym indexem, znajduje się najnowszy element).
-            jeżeli ilość elementów jest większa niż długość ogona to usuwamy najstarszy element.
+            jeżeli ilość elementów jest większa niż długość węża to usuwamy najstarszy element.
              */
             snakeParts.add( new Point(snakeHead));
-            if (snakeParts.size() > tailLength){
+            if (snakeParts.size() > snakeLength){
                 snakeParts.remove(0);
             }
         }
@@ -268,4 +267,11 @@ public class Snake implements ActionListener, KeyListener {
         return isPossibleToMove;
     }
 
+    public static int getSnakeLength() {
+        return snakeLength;
+    }
+
+    public static int getScore() {
+        return score;
+    }
 }

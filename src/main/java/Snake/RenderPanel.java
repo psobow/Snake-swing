@@ -46,5 +46,11 @@ public class RenderPanel extends JPanel {
         for (Point point : Snake.snakeParts){
             g.fillRect(point.x * SCALE, point.y * SCALE, SCALE, SCALE);
         }
+
+        // statistics
+        g.setColor(Color.WHITE);
+        g.drawString("Score: " + Snake.getScore(),
+                        Snake.getFrameWidth() / 2 + 20,
+                        10);
     }
 }
