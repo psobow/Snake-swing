@@ -20,7 +20,7 @@ public class Snake implements ActionListener, KeyListener {
     private enum Direction{
         UP, DOWN, LEFT, RIGHT
     }
-    private final int DELAY_IN_MS = 200;
+    private final int DELAY_IN_MS = 100;
     private final JPanel RENDER_PANEL = RenderPanel.getInstance();
     private final Timer TIMER = new Timer(DELAY_IN_MS,this);
     private final Random RANDOM_GENERATOR = new Random();
