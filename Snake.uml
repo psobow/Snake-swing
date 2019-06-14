@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>Snake</OriginalElement>
+  <nodes>
+    <node x="78.5" y="1216.0">Snake.SnakeRunner</node>
+    <node x="0.0" y="234.0">Snake.Snake</node>
+    <node x="40.5" y="0.0">Snake.RenderPanel</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="Snake.Snake" target="Snake.RenderPanel">
+      <point x="-81.5" y="-466.0" />
+      <point x="81.5" y="209.0" />
+      <point x="101.75" y="209.0" />
+      <point x="-61.25" y="92.0" />
+    </edge>
+    <edge source="Snake.RenderPanel" target="Snake.Snake">
+      <point x="61.25" y="92.0" />
+      <point x="224.25" y="209.0" />
+      <point x="244.5" y="209.0" />
+      <point x="81.5" y="-466.0" />
+    </edge>
+    <edge source="Snake.SnakeRunner" target="Snake.Snake">
+      <point x="0.0" y="-25.5" />
+      <point x="0.0" y="466.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.6083916083916084" x="163.0" y="633.5" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Fields</Category>
+    <Category>Methods</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

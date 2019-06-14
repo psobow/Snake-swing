@@ -184,7 +184,7 @@ public class Snake implements ActionListener, KeyListener {
 
     private Point getNewCookieLocation(){
         // TODO: Nowa pozycja ciastka nie może pokrywać się z wężem
-        int newXLocation = RANDOM_GENERATOR.nextInt(FRAME_WIDTH / SCALE);
+        int newXLocation = RANDOM_GENERATOR.nextInt((FRAME_WIDTH / SCALE) - 1);
         int newYLocation = RANDOM_GENERATOR.nextInt((FRAME_HEIGHT - PIXEL_AMOUNT_TAKEN_BY_FRAME_BAR) / SCALE);
 
         //log.info("Nowa pozycja ciastka: X = " + newXLocation + " Y = " + newYLocation );
