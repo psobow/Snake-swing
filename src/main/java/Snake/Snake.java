@@ -101,7 +101,6 @@ public class Snake implements ActionListener, KeyListener {
             throw new IllegalArgumentException("Invalid initial values."
             );
 
-        TIMER.start();
     }
 
     static Snake getInstance(){
@@ -235,7 +234,13 @@ public class Snake implements ActionListener, KeyListener {
                 break;
             case KeyEvent.VK_SPACE: // restart game
                 startGame();
+                TIMER.start();
                 break;
+            case KeyEvent.VK_ENTER:
+                startGame();
+                TIMER.stop();
+                RENDER_PANEL.revalidate();
+                RENDER_PANEL.repaint();
             default:
                 break;
         }

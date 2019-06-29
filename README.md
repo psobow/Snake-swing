@@ -7,6 +7,9 @@ Classic snake game implemented in Java using [Swing](https://en.wikipedia.org/wi
 - A (Change moving direction to west)
 - D (Change moving direction to east)
 - Space (Restart game)
+- Enter (Restart game and pause)
 
-# Project insight
-![App](/misc/app-screen.png)
+# Game play
+<p align="center">
+  <img src="https://github.com/psobow/Snake-swing/blob/master/misc/game.gif"/>
+</p>
